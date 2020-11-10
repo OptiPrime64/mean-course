@@ -1,8 +1,13 @@
- :host {  /* ':host' Targets the element itself */
+ :host {
+   /* ':host' Targets the element itself */
    margin-top: 1rem;
    display: block;
  }
 
  .info-text {
    text-align: center;
+ }
+
+ mat-spinner {
+   margin: auto;
  }
