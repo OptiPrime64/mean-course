@@ -1,4 +1,6 @@
+const path = require("path");
 const express = require('express');
+
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
@@ -17,7 +19,8 @@ mongoose.connect('mongodb+srv://harold:22lLDc7HT6hPo3Dy@cluster0.efqqc.mongodb.n
   });
 
 app.use(bodyParser.json());
-//app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use("/images", express.static(path.join("backend/images"))); //Allows requests to images folder
 
 app.get('/favicon.ico', (req, res) => res.status(204));
 
