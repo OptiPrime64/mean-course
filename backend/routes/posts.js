@@ -33,7 +33,9 @@ router.post('', multer({ storage: storage }).single("image"), (req, res, next) =
     title: req.body.title,
     content: req.body.content,
     imagePath: url + "/images/" + req.file.filename
+    // imagePath: req.file ? (url + "/images/" +  req.file.filename) : '' optional img post
   });
+  console.log(post);
   post.save().then(createdPost => {
     res.status(201).json({
       message: "Post added successfully.",

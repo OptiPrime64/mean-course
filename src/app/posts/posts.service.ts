@@ -53,12 +53,14 @@ export class PostsService {
   }
 
   addPost(title: string, content: string, image: File) {
-    // const post: Post = { id: null, title: title, content: content };
     const postData = new FormData();
     postData.append("title", title);
     postData.append("content", content);
+    // optional img post
+    // if (image !== null){
+    //   postData.append("image", image, title);
+    // }
     postData.append("image", image, title);
-
     this.http
       .post<{ message: string, post: Post }>("http://localhost:3000/api/posts", postData)
       .subscribe(responseData => {
