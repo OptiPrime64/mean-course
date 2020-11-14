@@ -30,46 +30,54 @@ const storage = multer.diskStorage({
 
 router.post( //don't execute checkAuth
   '', checkAuth, multer({ storage: storage }).single("image"), (req, res, next) => {
-  const url = req.protocol + '://' + req.get("host"); //url of server
-  const post = new Post({
-    title: req.body.title,
-    content: req.body.content,
-    imagePath: url + "/images/" + req.file.filename
-    // imagePath: req.file ? (url + "/images/" +  req.file.filename) : '' optional img post
-  });
-  console.log(post);
-  post.save().then(createdPost => {
-    res.status(201).json({
-      message: "Post added successfully.",
-      post: {
-        // title: createdPost.title,
-        // content: createdPost.content,
-        // imagePath: createdPost.imagePath,
-        ...createdPost,
-        id: createdPost._id
-      }
+    const url = req.protocol + '://' + req.get("host"); //url of server
+    const post = new Post({
+      title: req.body.title,
+      content: req.body.content,
+      imagePath: url + "/images/" + req.file.filename,
+      // imagePath: req.file ? (url + "/images/" +  req.file.filename) : '' optional img post
+      creator: req.userData.userId
+    });
+    console.log(post);
+    post.save().then(createdPost => {
+      res.status(201).json({
+        message: "Post added successfully.",
+        post: {
+          // title: createdPost.title,
+          // content: createdPost.content,
+          // imagePath: createdPost.imagePath,
+          ...createdPost,
+          id: createdPost._id
+        }
+      });
     });
   });
-});
 
 router.put(
   "/:id", checkAuth, multer({ storage: storage }).single("image"), (req, res, next) => {
-  let imagePath = req.body.imagePath;
-  if (req.file) {
-    const url = req.protocol + '://' + req.get("host");
-    imagePath = url + "/images/" + req.file.filename;
-  }
-  const post = new Post({
-    _id: req.body.id,
-    title: req.body.title,
-    content: req.body.content,
-    imagePath: imagePath
+    let imagePath = req.body.imagePath;
+    if (req.file) {
+      const url = req.protocol + '://' + req.get("host");
+      imagePath = url + "/images/" + req.file.filename;
+    }
+    const post = new Post({
+      _id: req.body.id,
+      title: req.body.title,
+      content: req.body.content,
+      imagePath: imagePath,
+      creator: req.userData.userId
+    });
+    Post.updateOne({
+      _id: req.params.id,
+      creator: req.userData.userId
+    }, post).then(result => {
+      if (result.nModified > 0) {
+        res.status(200).json({ message: "Update successful!" });
+      } else {
+        res.status(401).json({ message: "Not authorized!" });
+      }
+    });
   });
-  console.log(post);
-  Post.updateOne({ _id: req.params.id }, post).then(result => {
-    res.status(200).json({ message: "Update successful!" });
-  });
-});
 
 router.get('', (req, res, next) => {
   const pageSize = +req.query.pagesize;
@@ -78,20 +86,20 @@ router.get('', (req, res, next) => {
   let fetchedPosts;
   if (pageSize && currentPage) {
     postQuery
-    .skip(pageSize * (currentPage -1))
-    .limit(pageSize);
+      .skip(pageSize * (currentPage - 1))
+      .limit(pageSize);
   }
   postQuery.then(documents => {
     fetchedPosts = documents;
     return Post.countDocuments();
   })
-  .then(count => {
-    res.status(200).json({
-      message: 'Posts fetched successfully!',
-      posts: fetchedPosts,
-      maxPosts: count
+    .then(count => {
+      res.status(200).json({
+        message: 'Posts fetched successfully!',
+        posts: fetchedPosts,
+        maxPosts: count
+      });
     });
-  });
 });
 
 router.get("/:id", (req, res, next) => {
@@ -105,9 +113,15 @@ router.get("/:id", (req, res, next) => {
 })
 
 router.delete("/:id", checkAuth, (req, res, next) => {
-  Post.deleteOne({ _id: req.params.id }).then(result => {
-    console.log(result);
-    res.status(200).json({ message: "Post deleted!" });
+  Post.deleteOne({
+    _id: req.params.id,
+    creator: req.userData.userId
+  }).then(result => {
+    if (result.n > 0) {
+      res.status(200).json({ message: "Deletion successful!" });
+    } else {
+      res.status(401).json({ message: "Not authorized!" });
+    }
   });
 });
 
