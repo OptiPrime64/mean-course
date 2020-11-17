@@ -32,7 +32,7 @@ export class PostListComponent implements OnInit, OnDestroy {
     private authService: AuthService) { }
 
   ngOnInit() {
-    this.isLoading = true;
+    // this.isLoading = true;
     this.postsService.getPosts(this.postsPerPage, this.currentPage);
     this.userId = this.authService.getUserId();
     this.postsSub = this.postsService.getPostUpdateListener()
